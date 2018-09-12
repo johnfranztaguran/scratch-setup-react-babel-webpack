@@ -1,27 +1,25 @@
 import React, { Component } from "react";
 import LoginBox from "./log/loginBox";
-//import RegisterBox from "./log/regBox";
 import firebaseApp from "./log/fire";
 import Blank from "./blank";
 
 class App extends Component {
-  constructor(props) {
-      super(props);
-      this.state = {
-          user:{},
-        // isLoginOpen: true,
-        // isRegisterOpen: false,
-      };
+  constructor(props){
+    super(props)
+    this.state = {
+      email: '',
+      password: "",
+      user: {},
+      error: {
+        message: ""
+      }
     }
-
-//   showLoginBox() {
-//     this.setState({ isLoginOpen: true, isRegisterOpen: false });
-//   }
-
-//   showRegisterBox() {
-//     this.setState({ isRegisterOpen: true, isLoginOpen: false });
-//   }
-
+    this.handleChangeEm = this.handleChangeEm.bind(this)
+    this.handleChangePass = this.handleChangePass.bind(this)
+    this.login = this.login.bind(this)
+    this.signup = this.signup.bind(this)
+    this.logout = this.logout.bind(this)
+  }
   componentDidMount(){
       this.authListener();
   }
@@ -31,19 +29,74 @@ class App extends Component {
         console.log(user);
         if(user){
             this.setState({ user })
-            //localStorage.setItem("user", user.uid)
         }else{
             this.setState({user: null});
-            //localStorage.removeItem("user")
         }
       })
+  }
+
+  handleChangeEm(emails){
+     this.setState({
+       email: emails.target.value
+     })
+   }
+   handleChangePass(pass){
+     this.setState({
+       password: pass.target.value
+     })
+   }
+
+   login(e){
+     console.log("hey", e)
+    e.preventDefault();
+    firebaseApp.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
+    .catch(error => {
+      // console.log("error", error)
+      this.setState({error})
+      this.state.error.message = ""
+    })
+  
+  }
+  
+  signup(e){
+    e.preventDefault();
+    firebaseApp.auth().createUserWithEmailAndPassword(this.state.email, this.state.password)
+    .catch(error => {
+      console.log("error", error)
+      this.setState({error})
+      this.state.error.message = ""
+    })
+  }
+
+  logout(){
+    firebaseApp.auth().signOut();
+}
+
+  deleteUser(){
+    const user = firebaseApp.auth().currentUser;
+    user.delete()
+    .then((user) => {
+        alert("successfully delete")
+        console.log("deleted", user)
+    })
+    .catch((error) => {
+        console.log("error", error)
+        this.setState({error})
+    })
   }
 
   render() {
     return (
       <div className="root-container">
-        <div className="box-controller">
-          {this.state.user ? (<Blank />) :(<LoginBox />)}
+        <div>
+          {this.state.user ? (<Blank deleteUser={this.deleteUser} logout={this.logout} error={this.state.error} />) :
+          (<LoginBox 
+          login={this.login} 
+          signup={this.signup} 
+          handleChangeEm={this.handleChangeEm}
+          handleChangePass={this.handleChangePass}
+          error={this.state.error}
+          />)}
         </div>
 
         
@@ -54,30 +107,3 @@ class App extends Component {
 
 export default App;
 
-{/* <div className="root-container">
-        <div className="box-controller">
-          <div
-            className={
-              "controller " +
-              (this.state.isLoginOpen ? "selected-controller" : "")
-            }
-            onClick={this.showLoginBox.bind(this)}
-          >
-            Login
-          </div>
-          <div
-            className={
-              "controller " +
-              (this.state.isRegisterOpen ? "selected-controller" : "")
-            }
-            onClick={this.showRegisterBox.bind(this)}
-          >
-            Register
-          </div>
-        </div>
-
-        <div className="box-container">
-          {this.state.isLoginOpen && <LoginBox  /> || this.state.user ? (<Blank />) :(<LoginBox />)}
-          {this.state.isRegisterOpen && <RegisterBox />}
-        </div>
-      </div> */}
